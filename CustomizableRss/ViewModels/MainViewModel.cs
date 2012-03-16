@@ -1,45 +1,48 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Globalization;
+using System.Net;
+using CustomizableRss.Rss;
+using CustomizableRss.Rss.Enumerators;
+using CustomizableRss.Rss.Structure;
+using CustomizableRss.Rss.Structure.Validators;
 
-
-namespace CustomizableRss
+namespace CustomizableRss.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+        private string _sampleProperty = "Sample Runtime Property Value";
+
         public MainViewModel()
         {
-            this.Items = new ObservableCollection<ItemViewModel>();
+            Items = new ObservableCollection<ItemViewModel>();
+            StorySources = new ObservableCollection<Rss.Structure.Rss>();            
         }
+
 
         /// <summary>
         /// A collection for ItemViewModel objects.
         /// </summary>
         public ObservableCollection<ItemViewModel> Items { get; private set; }
-        public ObservableCollection<RssSource> StorySources { get; private set; }
 
-        private string _sampleProperty = "Sample Runtime Property Value";
+        private ObservableCollection<Rss.Structure.Rss> _storySources;
+        public ObservableCollection<Rss.Structure.Rss> StorySources
+        {
+            get { return _storySources; }
+            private set { _storySources = value; 
+                NotifyPropertyChanged("StorySources");
+            }
+        }
+
         /// <summary>
         /// Sample ViewModel property; this property is used in the view to display its value using a Binding
         /// </summary>
         /// <returns></returns>
         public string SampleProperty
         {
-            get
-            {
-                return _sampleProperty;
-            }
+            get { return _sampleProperty; }
             set
             {
                 if (value != _sampleProperty)
@@ -50,10 +53,28 @@ namespace CustomizableRss
             }
         }
 
-        public bool IsDataLoaded
+        public bool IsDataLoaded { get; private set; }
+
+        #region INotifyPropertyChanged Members
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
+
+        private void EndGetResponse(IAsyncResult result)
         {
-            get;
-            private set;
+            try
+            {
+                var state = result.AsyncState as RequestState;
+                var response = state.Request.EndGetResponse(result);
+                var rss = RssHelper.ReadRss(response.GetResponseStream());
+                StorySources.Add(rss);
+            } catch (Exception) {}
+        }
+
+        private void GotResponse(Uri address, HttpStatusCode code)
+        {
+            //BOOM RECEIVED
         }
 
         /// <summary>
@@ -61,28 +82,25 @@ namespace CustomizableRss
         /// </summary>
         public void LoadData()
         {
-            // Sample data; replace with real data
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime one", LineTwo = "Maecenas praesent accumsan bibendum", LineThree = "Facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat pulvinar sagittis senectus sociosqu" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime two", LineTwo = "Dictumst eleifend facilisi faucibus", LineThree = "Suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime three", LineTwo = "Habitant inceptos interdum lobortis", LineThree = "Habitant inceptos interdum lobortis nascetur pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime four", LineTwo = "Nascetur pharetra placerat pulvinar", LineThree = "Ultrices vehicula volutpat maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime five", LineTwo = "Maecenas praesent accumsan bibendum", LineThree = "Maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime six", LineTwo = "Dictumst eleifend facilisi faucibus", LineThree = "Pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime seven", LineTwo = "Habitant inceptos interdum lobortis", LineThree = "Accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime eight", LineTwo = "Nascetur pharetra placerat pulvinar", LineThree = "Pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime nine", LineTwo = "Maecenas praesent accumsan bibendum", LineThree = "Facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat pulvinar sagittis senectus sociosqu" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime ten", LineTwo = "Dictumst eleifend facilisi faucibus", LineThree = "Suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime eleven", LineTwo = "Habitant inceptos interdum lobortis", LineThree = "Habitant inceptos interdum lobortis nascetur pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime twelve", LineTwo = "Nascetur pharetra placerat pulvinar", LineThree = "Ultrices vehicula volutpat maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime thirteen", LineTwo = "Maecenas praesent accumsan bibendum", LineThree = "Maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime fourteen", LineTwo = "Dictumst eleifend facilisi faucibus", LineThree = "Pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime fifteen", LineTwo = "Habitant inceptos interdum lobortis", LineThree = "Accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime sixteen", LineTwo = "Nascetur pharetra placerat pulvinar", LineThree = "Pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum" });
-
-            this.IsDataLoaded = true;
+            //LoadRssFeeds();
+            var item = GetFullRSS();
+            StorySources.Add(item);
+            IsDataLoaded = true;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        private void LoadRssFeeds()
+        {
+            var uri = new Uri("https://www.npr.org/rss/rss.php?id=1007");
+            var addresses = new List<Uri> {uri};
+            //WebRequest.Create(uri).BeginGetRequestStream(asyncCallback => { StorySources.Add(RssHelper.ReadRss()); })
+
+            foreach (Uri current in addresses)
+            {
+                WebRequest request = WebRequest.Create(current);
+                request.BeginGetResponse(EndGetResponse, new RequestState {Request = request, Address = current});
+            }
+        }
+
         private void NotifyPropertyChanged(String propertyName)
         {
             PropertyChangedEventHandler handler = PropertyChanged;
@@ -91,5 +109,97 @@ namespace CustomizableRss
                 handler(this, new PropertyChangedEventArgs(propertyName));
             }
         }
+
+        private static Rss.Structure.Rss GetFullRSS()
+        {
+            return new Rss.Structure.Rss
+            {
+                Channel =
+                    new RssChannel
+                    {
+                        AtomLink = new RssLink { Href = new RssUrl("http://atomlink.com"), Rel = Rel.self, Type = "text/plain" },
+                        Category = "category",
+                        Cloud =
+                            new RssCloud
+                            {
+                                Domain = "domain",
+                                Path = "path",
+                                Port = 1234,
+                                Protocol = Protocol.xmlrpc,
+                                RegisterProcedure = "registerProcedure"
+                            },
+                        Copyright = "copyrignt (c)",
+                        Description = "long description",
+                        Image =
+                            new RssImage
+                            {
+                                Description = "Image Description",
+                                Height = 100,
+                                Width = 100,
+                                Link = new RssUrl("http://www.birdorable.com/img/bird/box/box-barred-owl.gif"),
+                                Title = "title",
+                                Url = new RssUrl("http://www.birdorable.com/img/bird/box/box-barred-owl.gif")
+                            },
+                        Language = new CultureInfo("en"),
+                        LastBuildDate = new DateTime(2011, 7, 17, 15, 55, 41),
+                        Link = new RssUrl("http://channel.url.com"),
+                        ManagingEditor = new RssEmail("managingEditor@mail.com (manager)"),
+                        PubDate = new DateTime(2011, 7, 17, 15, 55, 41),
+                        Rating = "rating",
+                        SkipDays = new List<Day> { Day.Thursday, Day.Wednesday },
+                        SkipHours = new List<Hour> { new Hour(22), new Hour(15), new Hour(4) },
+                        TextInput =
+                            new RssTextInput
+                            {
+                                Description = "text input desctiption",
+                                Link = new RssUrl("http://text.input.link.com"),
+                                Name = "text input name",
+                                Title = "text input title"
+                            },
+                        Title = "channel title",
+                        TTL = 10,
+                        WebMaster = new RssEmail("webmaster@mail.ru (webmaster)"),
+                        Item =
+                            new List<RssItem>
+                                        {
+                                            new RssItem
+                                                {
+                                                    Author = new RssEmail("item.author@mail.ru (author)"),
+                                                    Category =
+                                                        new RssCategory
+                                                            {
+                                                                Domain = "category domain value", 
+                                                                Text = "category text value"
+                                                            },
+                                                    Comments = new RssUrl("http://rss.item.comment.url.com"),
+                                                    Description = "item description",
+                                                    Enclosure =
+                                                        new RssEnclosure
+                                                            {
+                                                                Length = 1234,
+                                                                Type = "text/plain",
+                                                                Url = new RssUrl("http://rss.item.enclosure.type.url.com")
+                                                            },
+                                                    Link = new RssUrl("http://rss.item.link.url.com"),
+                                                    PubDate = new DateTime(2011, 7, 17, 15, 55, 41),
+                                                    Title = "item title",
+                                                    Guid = new RssGuid { IsPermaLink = false, Value = "guid value" },
+                                                    Source = new RssSource { Url = new RssUrl("http://rss.item.source.url.com") }
+                                                }
+                                        }
+                    }
+            };
+        }
+
+
+        #region Nested type: RequestState
+
+        private class RequestState
+        {
+            public WebRequest Request { get; set; }
+            public Uri Address { get; set; }
+        }
+
+        #endregion
     }
 }

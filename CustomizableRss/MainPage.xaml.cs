@@ -10,6 +10,8 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
+using Microsoft.Phone.Tasks;
+using GestureEventArgs = System.Windows.Input.GestureEventArgs;
 
 namespace CustomizableRss
 {
@@ -33,5 +35,23 @@ namespace CustomizableRss
                 App.ViewModel.LoadData();
             }
         }
+
+        private void GoToStory(object sender, GestureEventArgs gestureEventArgs)
+        {
+            var rssItem = (sender as StackPanel).DataContext as Rss.Structure.RssItem;
+            var wbt = new WebBrowserTask();
+            wbt.URL = rssItem.Link.UrlString;
+            wbt.Show();
+        }
+
+        private void ShareOnTwitterClick(object sender, RoutedEventArgs e)
+        {
+            
+        }
+        private void ShareOnFacebookClick(object sender, RoutedEventArgs e)
+        {
+            
+        }
+        private void HideClick(object sender, RoutedEventArgs e) {}
     }
 }
