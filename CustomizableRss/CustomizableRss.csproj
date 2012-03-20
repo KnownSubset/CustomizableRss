@@ -68,6 +68,7 @@
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="MiniRss\RssFeed.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rss\Enumerators\Day.cs" />
     <Compile Include="Rss\Enumerators\Hour.cs" />
@@ -75,7 +76,7 @@
     <Compile Include="Rss\Enumerators\Rel.cs" />
     <Compile Include="Rss\Exceptions\RSSParameterException.cs" />
     <Compile Include="Rss\RSSHelper.cs" />
-    <Compile Include="Rss\Structure\Rss.cs" />
+    <Compile Include="Rss\Structure\RssFeed.cs" />
     <Compile Include="Rss\Structure\RssCategory.cs" />
     <Compile Include="Rss\Structure\RssChannel.cs" />
     <Compile Include="Rss\Structure\RssCloud.cs" />

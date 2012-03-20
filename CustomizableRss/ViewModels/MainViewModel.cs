@@ -2,23 +2,25 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Globalization;
+using System.IO.IsolatedStorage;
+using System.Linq;
 using System.Net;
+using System.Windows;
+using CustomizableRss.MiniRss;
 using CustomizableRss.Rss;
-using CustomizableRss.Rss.Enumerators;
-using CustomizableRss.Rss.Structure;
-using CustomizableRss.Rss.Structure.Validators;
 
 namespace CustomizableRss.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
         private string _sampleProperty = "Sample Runtime Property Value";
+        private ObservableCollection<MiniRss.RssFeed> _storySources;
+        private readonly IsolatedStorageSettings _applicationSettings = IsolatedStorageSettings.ApplicationSettings;
 
         public MainViewModel()
         {
             Items = new ObservableCollection<ItemViewModel>();
-            StorySources = new ObservableCollection<Rss.Structure.Rss>();            
+            StorySources = new ObservableCollection<MiniRss.RssFeed>();
         }
 
 
@@ -27,11 +29,12 @@ namespace CustomizableRss.ViewModels
         /// </summary>
         public ObservableCollection<ItemViewModel> Items { get; private set; }
 
-        private ObservableCollection<Rss.Structure.Rss> _storySources;
-        public ObservableCollection<Rss.Structure.Rss> StorySources
+        public ObservableCollection<MiniRss.RssFeed> StorySources
         {
             get { return _storySources; }
-            private set { _storySources = value; 
+            private set
+            {
+                _storySources = value;
                 NotifyPropertyChanged("StorySources");
             }
         }
@@ -66,15 +69,29 @@ namespace CustomizableRss.ViewModels
             try
             {
                 var state = result.AsyncState as RequestState;
-                var response = state.Request.EndGetResponse(result);
-                var rss = RssHelper.ReadRss(response.GetResponseStream());
-                StorySources.Add(rss);
-            } catch (Exception) {}
+                WebResponse response = state.Request.EndGetResponse(result);
+                Rss.Structure.RssFeed rss = RssHelper.ReadRss(response.GetResponseStream());
+                Deployment.Current.Dispatcher.BeginInvoke(() => UpdateRssFeed(rss, state.RssFeed));
+            } catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message);
+            }
         }
 
-        private void GotResponse(Uri address, HttpStatusCode code)
+        private void UpdateRssFeed(Rss.Structure.RssFeed rss, MiniRss.RssFeed rssFeed)
         {
-            //BOOM RECEIVED
+            var miniRss = new MiniRss.RssFeed(rss);
+            rssFeed.Stories.Clear();
+            foreach (RssStory story in miniRss.Stories){
+                rssFeed.Stories.Add(story);
+            }
+            _applicationSettings.Remove(rssFeed.RssTitle);
+            rssFeed.RssTitle = miniRss.RssTitle;
+            NotifyPropertyChanged("StorySources");
+            NotifyPropertyChanged("Stories");
+            rssFeed.LastUpdated = DateTime.Now;
+            _applicationSettings["rssFeeds"] = new Collection<MiniRss.RssFeed> (StorySources);
+            _applicationSettings.Save();
         }
 
         /// <summary>
@@ -82,22 +99,36 @@ namespace CustomizableRss.ViewModels
         /// </summary>
         public void LoadData()
         {
-            //LoadRssFeeds();
-            var item = GetFullRSS();
-            StorySources.Add(item);
+            if (!_applicationSettings.Contains("initialized"))
+            {
+                _applicationSettings["initialized"] = true;
+                var hackerNewRssFeed = new MiniRss.RssFeed();
+                hackerNewRssFeed.RssTitle = "Hacker News";
+                hackerNewRssFeed.RssLink = new Uri("https://news.ycombinator.com/rss");
+                var nprScienceNewRssFeed = new MiniRss.RssFeed();
+                nprScienceNewRssFeed.RssTitle = "Science";
+                nprScienceNewRssFeed.RssLink = new Uri("https://www.npr.org/rss/rss.php?id=1007");
+                _applicationSettings["rssFeeds"] = new Collection<MiniRss.RssFeed> {hackerNewRssFeed, nprScienceNewRssFeed};
+                _applicationSettings.Save();
+            }
+            StorySources = new ObservableCollection<MiniRss.RssFeed>(_applicationSettings["rssFeeds"] as Collection<MiniRss.RssFeed>);
+            LoadRssFeeds();
             IsDataLoaded = true;
         }
 
         private void LoadRssFeeds()
         {
-            var uri = new Uri("https://www.npr.org/rss/rss.php?id=1007");
-            var addresses = new List<Uri> {uri};
-            //WebRequest.Create(uri).BeginGetRequestStream(asyncCallback => { StorySources.Add(RssHelper.ReadRss()); })
+            foreach (MiniRss.RssFeed rssFeed in StorySources){
+                LoadRssFeed(rssFeed);
+            }
+        }
 
-            foreach (Uri current in addresses)
+        private void LoadRssFeed(MiniRss.RssFeed rssFeed)
+        {
+            var timeSpan = new TimeSpan(DateTime.Now.Ticks - rssFeed.LastUpdated.Ticks);
+            if (timeSpan.Days > 0)
             {
-                WebRequest request = WebRequest.Create(current);
-                request.BeginGetResponse(EndGetResponse, new RequestState {Request = request, Address = current});
+                RefreshRssFeed(rssFeed);
             }
         }
 
@@ -110,87 +141,18 @@ namespace CustomizableRss.ViewModels
             }
         }
 
-        private static Rss.Structure.Rss GetFullRSS()
-        {
-            return new Rss.Structure.Rss
-            {
-                Channel =
-                    new RssChannel
-                    {
-                        AtomLink = new RssLink { Href = new RssUrl("http://atomlink.com"), Rel = Rel.self, Type = "text/plain" },
-                        Category = "category",
-                        Cloud =
-                            new RssCloud
-                            {
-                                Domain = "domain",
-                                Path = "path",
-                                Port = 1234,
-                                Protocol = Protocol.xmlrpc,
-                                RegisterProcedure = "registerProcedure"
-                            },
-                        Copyright = "copyrignt (c)",
-                        Description = "long description",
-                        Image =
-                            new RssImage
-                            {
-                                Description = "Image Description",
-                                Height = 100,
-                                Width = 100,
-                                Link = new RssUrl("http://www.birdorable.com/img/bird/box/box-barred-owl.gif"),
-                                Title = "title",
-                                Url = new RssUrl("http://www.birdorable.com/img/bird/box/box-barred-owl.gif")
-                            },
-                        Language = new CultureInfo("en"),
-                        LastBuildDate = new DateTime(2011, 7, 17, 15, 55, 41),
-                        Link = new RssUrl("http://channel.url.com"),
-                        ManagingEditor = new RssEmail("managingEditor@mail.com (manager)"),
-                        PubDate = new DateTime(2011, 7, 17, 15, 55, 41),
-                        Rating = "rating",
-                        SkipDays = new List<Day> { Day.Thursday, Day.Wednesday },
-                        SkipHours = new List<Hour> { new Hour(22), new Hour(15), new Hour(4) },
-                        TextInput =
-                            new RssTextInput
-                            {
-                                Description = "text input desctiption",
-                                Link = new RssUrl("http://text.input.link.com"),
-                                Name = "text input name",
-                                Title = "text input title"
-                            },
-                        Title = "channel title",
-                        TTL = 10,
-                        WebMaster = new RssEmail("webmaster@mail.ru (webmaster)"),
-                        Item =
-                            new List<RssItem>
-                                        {
-                                            new RssItem
-                                                {
-                                                    Author = new RssEmail("item.author@mail.ru (author)"),
-                                                    Category =
-                                                        new RssCategory
-                                                            {
-                                                                Domain = "category domain value", 
-                                                                Text = "category text value"
-                                                            },
-                                                    Comments = new RssUrl("http://rss.item.comment.url.com"),
-                                                    Description = "item description",
-                                                    Enclosure =
-                                                        new RssEnclosure
-                                                            {
-                                                                Length = 1234,
-                                                                Type = "text/plain",
-                                                                Url = new RssUrl("http://rss.item.enclosure.type.url.com")
-                                                            },
-                                                    Link = new RssUrl("http://rss.item.link.url.com"),
-                                                    PubDate = new DateTime(2011, 7, 17, 15, 55, 41),
-                                                    Title = "item title",
-                                                    Guid = new RssGuid { IsPermaLink = false, Value = "guid value" },
-                                                    Source = new RssSource { Url = new RssUrl("http://rss.item.source.url.com") }
-                                                }
-                                        }
-                    }
-            };
+        public void HideRssItem(RssStory rssItem){
+            foreach (MiniRss.RssFeed source in App.ViewModel.StorySources){
+                source.Stories.Remove(rssItem);
+            }
+            StorySources = new ObservableCollection<MiniRss.RssFeed>(StorySources);
         }
 
+        public void RefreshRssFeed(MiniRss.RssFeed rssFeed)
+        {
+            WebRequest request = WebRequest.Create(rssFeed.RssLink);
+            request.BeginGetResponse(EndGetResponse, new RequestState {Request = request, Address = rssFeed.RssLink, RssFeed = rssFeed});
+        }
 
         #region Nested type: RequestState
 
@@ -198,6 +160,7 @@ namespace CustomizableRss.ViewModels
         {
             public WebRequest Request { get; set; }
             public Uri Address { get; set; }
+            public MiniRss.RssFeed RssFeed { get; set; }
         }
 
         #endregion

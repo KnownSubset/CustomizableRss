@@ -9,6 +9,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
+using CustomizableRss.MiniRss;
+using CustomizableRss.Rss.Structure;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Tasks;
 using GestureEventArgs = System.Windows.Input.GestureEventArgs;
@@ -38,20 +40,32 @@ namespace CustomizableRss
 
         private void GoToStory(object sender, GestureEventArgs gestureEventArgs)
         {
-            var rssItem = (sender as StackPanel).DataContext as Rss.Structure.RssItem;
+            var rssItem = (sender as StackPanel).DataContext as RssStory;
             var wbt = new WebBrowserTask();
-            wbt.URL = rssItem.Link.UrlString;
+            wbt.URL = rssItem.StoryLink.AbsoluteUri;
             wbt.Show();
         }
 
-        private void ShareOnTwitterClick(object sender, RoutedEventArgs e)
+        private void Share(object sender, RoutedEventArgs e)
         {
-            
+            var rssItem = (sender as MenuItem).DataContext as RssStory;
+            var shareLinkTask = new ShareLinkTask();
+            shareLinkTask.LinkUri = rssItem.StoryLink;
+            shareLinkTask.Title = rssItem.Title;
+            shareLinkTask.Message = rssItem.Description;
+            shareLinkTask.Show();   
         }
-        private void ShareOnFacebookClick(object sender, RoutedEventArgs e)
+        private void HideClick(object sender, RoutedEventArgs e)
         {
-            
+            var rssItem = (sender as MenuItem).DataContext as MiniRss.RssStory;
+            App.ViewModel.HideRssItem(rssItem);
+
         }
-        private void HideClick(object sender, RoutedEventArgs e) {}
+
+        private void RefreshRssFeed(object sender, EventArgs e)
+        {
+            var rssFeed = rssPivot.SelectedItem as MiniRss.RssFeed;
+            App.ViewModel.RefreshRssFeed(rssFeed);
+        }
     }
 }

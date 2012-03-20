@@ -34,16 +34,6 @@ namespace CustomizableRss.ViewModels
             }
         }
 
-        public RssFeed RssFeed
-        {
-            get { return rssFeed; }
-            private set
-            {
-                rssFeed = value;
-                NotifyPropertyChanged("RssFeed");
-            }
-        }
-
         public bool IsDataLoaded { get; private set; }
 
         #region INotifyPropertyChanged Members
