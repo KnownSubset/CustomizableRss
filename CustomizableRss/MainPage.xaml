@@ -56,7 +56,7 @@
   <!--Sample code showing usage of ApplicationBar-->
   <phone:PhoneApplicationPage.ApplicationBar>
     <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-      <shell:ApplicationBarIconButton IconUri="/Images/appbar.feature.settings.rest.png" Text="settings" />
+      <shell:ApplicationBarIconButton IconUri="/Images/appbar.feature.settings.rest.png" Text="settings" Click="ViewSettings"  />
       <shell:ApplicationBarIconButton IconUri="/Images/appbar.refresh.rest.png" Text="refresh"  Click="RefreshRssFeed"/>
     </shell:ApplicationBar>
   </phone:PhoneApplicationPage.ApplicationBar>

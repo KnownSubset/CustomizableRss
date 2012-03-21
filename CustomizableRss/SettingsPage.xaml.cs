@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using CustomizableRss.MiniRss;
 using CustomizableRss.ViewModels;
 using Microsoft.Phone.Controls;
 
@@ -19,17 +20,18 @@ namespace CustomizableRss
     public partial class SettingsPage : PhoneApplicationPage
     {
         private readonly SettingsViewModel settingsViewModel = new SettingsViewModel();
+        private readonly IsolatedStorageSettings isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
 
         public SettingsPage()
         {
             DataContext = settingsViewModel;
+            settingsViewModel.LoadData();
             InitializeComponent();
         }
 
         private void EditRss(object sender, RoutedEventArgs e)
         {
             var rssItem = (sender as StackPanel).DataContext as RssFeed;
-            var isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
             isolatedStorageSettings["rssFeed"] = rssItem;
             settingsViewModel.RssFeeds.Remove(rssItem);
             NavigationService.Navigate(new Uri("AddEditPage.xaml", UriKind.Relative));
@@ -38,7 +40,6 @@ namespace CustomizableRss
 
         private void NavigatedBackToPage(object sender, NavigationEventArgs navigationEventArgs)
         {
-            var isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
             if (isolatedStorageSettings.Contains("rssFeed"))
             {
                 var rssFeed = isolatedStorageSettings["rssFeed"] as RssFeed;
@@ -49,12 +50,11 @@ namespace CustomizableRss
         private void DeleteRss(object sender, RoutedEventArgs e)
         {
             var rssItem = (sender as StackPanel).DataContext as RssFeed;
-            settingsViewModel.RssFeeds.Remove(rssItem);
+            settingsViewModel.RemoveRssFeed(rssItem);
         }
 
         private void AddRss(object sender, RoutedEventArgs e)
         {
-            var isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
             isolatedStorageSettings.Remove("rssFeed");
             NavigationService.Navigate(new Uri("AddEditPage.xaml", UriKind.Relative));
             NavigationService.Navigated += NavigatedBackToPage;
