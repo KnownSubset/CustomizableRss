@@ -78,9 +78,9 @@ namespace CustomizableRss.ViewModels
             }
         }
 
-        private void UpdateRssFeed(Rss.Structure.RssFeed rss, MiniRss.RssFeed rssFeed)
+        private void UpdateRssFeed(Rss.Structure.RssFeed rss, RssFeed rssFeed)
         {
-            var miniRss = new MiniRss.RssFeed(rss);
+            var miniRss = new RssFeed(rss);
             rssFeed.Stories.Clear();
             foreach (RssStory story in miniRss.Stories){
                 rssFeed.Stories.Add(story);
@@ -90,7 +90,7 @@ namespace CustomizableRss.ViewModels
             NotifyPropertyChanged("StorySources");
             NotifyPropertyChanged("Stories");
             rssFeed.LastUpdated = DateTime.Now;
-            _applicationSettings["rssFeeds"] = new Collection<MiniRss.RssFeed> (StorySources);
+            _applicationSettings["rssFeeds"] = new Collection<RssFeed> (StorySources);
             _applicationSettings.Save();
         }
 
@@ -111,7 +111,7 @@ namespace CustomizableRss.ViewModels
                 _applicationSettings["rssFeeds"] = new Collection<MiniRss.RssFeed> {hackerNewRssFeed, nprScienceNewRssFeed};
                 _applicationSettings.Save();
             }
-            StorySources = new ObservableCollection<MiniRss.RssFeed>(_applicationSettings["rssFeeds"] as Collection<MiniRss.RssFeed>);
+            StorySources = new ObservableCollection<RssFeed>(_applicationSettings["rssFeeds"] as Collection<RssFeed>);
             LoadRssFeeds();
             IsDataLoaded = true;
         }

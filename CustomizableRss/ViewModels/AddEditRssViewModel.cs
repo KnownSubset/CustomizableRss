@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO.IsolatedStorage;
 using System.Net;
 using System.Runtime.Serialization;
@@ -16,27 +17,27 @@ namespace CustomizableRss.ViewModels
         private const string RssFeedsKey = "rssFeed";
         private ObservableCollection<RssFeed> _rssFeeds = new ObservableCollection<RssFeed>();
         private readonly IsolatedStorageSettings isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
-        private string uri = "http://www.npr.org/rss/rss?1014";
-        private bool validRssFeed;
+        private string link = "http://www.npr.org/rss/rss.php?id=1014";
+        private string urlStatus = string.Empty;
+        private const string invalidRssFeed = "(ノಠ益ಠ)ノ彡┻━┻ it doesn't work";
+        private const string validRssFeed = "ヽ(´▽`)/ you are good!";
 
-        public string Uri
+        public string Link
         {
-            get { return uri; }
-            private set
-            {
-                uri = value;
-                NotifyPropertyChanged("uri");
+            get { return link; }
+            set {
+                link = value;
+                NotifyPropertyChanged("Link");
             }
-        }        
-        
+        }
 
-        public bool ValidRssFeed
+        public string UrlStatus
         {
-            get { return validRssFeed; }
+            get { return urlStatus; }
             private set
             {
-                validRssFeed = value;
-                NotifyPropertyChanged("ValidRssFeed");
+                urlStatus = value;
+                NotifyPropertyChanged("UrlStatus");
             }
         }
 
@@ -45,6 +46,12 @@ namespace CustomizableRss.ViewModels
         #region INotifyPropertyChanged Members
 
         public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged(String propertyName){
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (null != handler){
+                handler(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
 
         #endregion
 
@@ -53,40 +60,39 @@ namespace CustomizableRss.ViewModels
         /// </summary>
         public void LoadData()
         {
-            //var rssFeeds = isolatedStorageSettings[RssFeedsKey] as Collection<RssFeed>;
-            //RssFeeds = new ObservableCollection<RssFeed>(rssFeeds);
+            VerifyRssFeed();
             IsDataLoaded = true;
         }
 
-        
-        private void NotifyPropertyChanged(String propertyName)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (null != handler)
+        public void VerifyRssFeed() {
+            if (string.IsNullOrWhiteSpace(link)) return;
+            try
             {
-                handler(this, new PropertyChangedEventArgs(propertyName));
+                var requestUri = new Uri(link);
+                WebRequest request = WebRequest.Create(requestUri);
+                request.BeginGetResponse(EndGetResponse, new MainViewModel.RequestState { Request = request, Address = requestUri });
+            }catch (NotSupportedException exception){
+                Debug.Assert(exception != null);
+                Deployment.Current.Dispatcher.BeginInvoke(() => UrlStatus = invalidRssFeed);
+            } catch (UriFormatException exception){
+                Debug.Assert(exception != null);
+                Deployment.Current.Dispatcher.BeginInvoke(() => UrlStatus = invalidRssFeed);
             }
         }
 
-        public void VerifyRssFeed() {
-            if (string.IsNullOrWhiteSpace(uri)) return;
-            var requestUri = new Uri(Uri);
-            WebRequest request = WebRequest.Create(requestUri);
-            request.BeginGetResponse(EndGetResponse, new MainViewModel.RequestState { Request = request, Address = requestUri });
-        }
-
-        private void EndGetResponse(IAsyncResult result)
-        {
-            try
-            {
+        private void EndGetResponse(IAsyncResult result){
+            try{
                 var state = result.AsyncState as MainViewModel.RequestState;
                 WebResponse response = state.Request.EndGetResponse(result);
                 Rss.Structure.RssFeed rss = RssHelper.ReadRss(response.GetResponseStream());
-                Deployment.Current.Dispatcher.BeginInvoke(() => ValidRssFeed = true);
-            }
-            catch (Exception exception)
-            {
-                Deployment.Current.Dispatcher.BeginInvoke(() => ValidRssFeed = false);
+                if (rss.Channel == null){
+                    Deployment.Current.Dispatcher.BeginInvoke(() => UrlStatus = invalidRssFeed);
+                }else{
+                    Deployment.Current.Dispatcher.BeginInvoke(() => UrlStatus = validRssFeed);
+                }
+            }catch (Exception exception){
+                Debug.Assert(exception != null);
+                Deployment.Current.Dispatcher.BeginInvoke(() => UrlStatus = invalidRssFeed);
             }
         }
     }
