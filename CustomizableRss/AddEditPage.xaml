@@ -23,7 +23,7 @@
         <TextBlock Grid.Row="0" Text="RSS Fusion" Margin="25,17"/>
         <StackPanel Grid.Row="1" Margin="15">
             <TextBlock Text="rss feed url" Style="{StaticResource PhoneTextNormalStyle}"/>
-            <TextBox DataContext="{Binding UriString}" />
+            <TextBox Text="{Binding Path=Uri}" />
         </StackPanel>
     </Grid>
 

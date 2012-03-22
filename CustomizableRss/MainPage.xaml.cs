@@ -9,7 +9,6 @@ using GestureEventArgs = System.Windows.Input.GestureEventArgs;
 namespace CustomizableRss
 {
 
-    #region Classes
 
     public partial class MainPage : PhoneApplicationPage
     {
@@ -70,5 +69,4 @@ namespace CustomizableRss
         #endregion Methods of MainPage
     }
 
-    #endregion Classes
 }

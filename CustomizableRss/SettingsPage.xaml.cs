@@ -56,7 +56,7 @@ namespace CustomizableRss
         private void AddRss(object sender, RoutedEventArgs e)
         {
             isolatedStorageSettings.Remove("rssFeed");
-            NavigationService.Navigate(new Uri("AddEditPage.xaml", UriKind.Relative));
+            NavigationService.Navigate(new Uri("/AddEditPage.xaml", UriKind.Relative));
             NavigationService.Navigated += NavigatedBackToPage;
         }
     }

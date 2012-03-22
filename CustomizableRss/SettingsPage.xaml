@@ -16,12 +16,7 @@
 
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">
-        <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right">
-            <Button BorderThickness="0" Padding="-10" Click="AddRss" Width="50" Margin="15,70,25,0" HorizontalAlignment="Center"> 
-                <Image Source="/Images/appbar.basecircle.rest.png" />
-            </Button>
-            <Image Source="/Images/appbar.add.rest.png" Stretch="None" Margin="15, -55,25,-5" HorizontalAlignment="Center"/>
-        </StackPanel>
+        
         <!--Pivot Control-->
         <controls:Pivot Title="RSS Fusion">
             <!--Pivot item one-->
@@ -49,7 +44,14 @@
             </controls:PivotItem>
 
         </controls:Pivot>
-
+        <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right">
+            <Button BorderThickness="0" Padding="-10" Click="AddRss" Width="50"  Margin="15,70,25,0" HorizontalAlignment="Center">
+                <Grid>
+                    <Image Source="/Images/appbar.add.rest.png" Stretch="None" HorizontalAlignment="Center"/>
+                    <Image Source="/Images/appbar.basecircle.rest.png" />
+                </Grid>
+            </Button>
+        </StackPanel>
     </Grid>
 
     <!--Sample code showing usage of ApplicationBar-->

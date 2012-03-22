@@ -23,15 +23,13 @@ namespace CustomizableRss
         private readonly AddEditRssViewModel addEditRssViewModel =  new AddEditRssViewModel();
         public AddEditPage()
         {
+            InitializeComponent();
             DataContext = addEditRssViewModel;
             addEditRssViewModel.LoadData();
-            InitializeComponent();
         }
-        
 
-        private void VerifyRssFeed(object sender, EventArgs e)
-        {
-            addEditRssViewModel.VerifyRssFeed(this.)
+        private void VerifyRssFeed(object sender, EventArgs e) {
+            addEditRssViewModel.VerifyRssFeed();
         }
     }
 }

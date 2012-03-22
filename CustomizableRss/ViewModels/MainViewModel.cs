@@ -14,13 +14,13 @@ namespace CustomizableRss.ViewModels
     public class MainViewModel : INotifyPropertyChanged
     {
         private string _sampleProperty = "Sample Runtime Property Value";
-        private ObservableCollection<MiniRss.RssFeed> _storySources;
+        private ObservableCollection<RssFeed> _storySources;
         private readonly IsolatedStorageSettings _applicationSettings = IsolatedStorageSettings.ApplicationSettings;
 
         public MainViewModel()
         {
             Items = new ObservableCollection<ItemViewModel>();
-            StorySources = new ObservableCollection<MiniRss.RssFeed>();
+            StorySources = new ObservableCollection<RssFeed>();
         }
 
 
@@ -29,7 +29,7 @@ namespace CustomizableRss.ViewModels
         /// </summary>
         public ObservableCollection<ItemViewModel> Items { get; private set; }
 
-        public ObservableCollection<MiniRss.RssFeed> StorySources
+        public ObservableCollection<RssFeed> StorySources
         {
             get { return _storySources; }
             private set
@@ -118,12 +118,12 @@ namespace CustomizableRss.ViewModels
 
         private void LoadRssFeeds()
         {
-            foreach (MiniRss.RssFeed rssFeed in StorySources){
+            foreach (RssFeed rssFeed in StorySources){
                 LoadRssFeed(rssFeed);
             }
         }
 
-        private void LoadRssFeed(MiniRss.RssFeed rssFeed)
+        private void LoadRssFeed(RssFeed rssFeed)
         {
             var timeSpan = new TimeSpan(DateTime.Now.Ticks - rssFeed.LastUpdated.Ticks);
             if (timeSpan.Days > 0)
@@ -156,11 +156,11 @@ namespace CustomizableRss.ViewModels
 
         #region Nested type: RequestState
 
-        private class RequestState
+        public class RequestState
         {
             public WebRequest Request { get; set; }
             public Uri Address { get; set; }
-            public MiniRss.RssFeed RssFeed { get; set; }
+            public RssFeed RssFeed { get; set; }
         }
 
         #endregion
