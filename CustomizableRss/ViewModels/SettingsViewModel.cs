@@ -11,6 +11,7 @@ namespace CustomizableRss.ViewModels
     public class SettingsViewModel : INotifyPropertyChanged
     {
         private const string RssFeedsKey = "rssFeeds";
+        private const string RssFeedKey = "rssFeed";
         private ObservableCollection<RssFeed> _rssFeeds = new ObservableCollection<RssFeed>();
         private readonly IsolatedStorageSettings isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
 
@@ -52,11 +53,22 @@ namespace CustomizableRss.ViewModels
             }
         }
 
-        public void RemoveRssFeed(RssFeed rssFeed)
-        {
-            var rssFeeds = isolatedStorageSettings[RssFeedsKey] as Collection<MiniRss.RssFeed>;
+        public void RemoveRssFeed(RssFeed rssFeed){
+            var rssFeeds = isolatedStorageSettings[RssFeedsKey] as Collection<RssFeed>;
             rssFeeds.Remove(rssFeed);
             isolatedStorageSettings.Save();
+        }
+
+        public void UpdateRssFeeds(){
+            if (isolatedStorageSettings.Contains(RssFeedKey)){
+                var rssFeed = isolatedStorageSettings[RssFeedKey] as RssFeed;
+                if (!RssFeeds.Contains(rssFeed)){
+                    RssFeeds.Add(rssFeed);
+                    var rssFeeds = isolatedStorageSettings[RssFeedsKey] as Collection<RssFeed>;
+                    rssFeeds.Add(rssFeed);
+                }
+                isolatedStorageSettings.Remove(RssFeedKey);
+            }
         }
     }
 

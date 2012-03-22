@@ -19,6 +19,7 @@ namespace CustomizableRss
 {
     public partial class SettingsPage : PhoneApplicationPage
     {
+        private const string RssFeedKey = "rssFeed";
         private readonly SettingsViewModel settingsViewModel = new SettingsViewModel();
         private readonly IsolatedStorageSettings isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
 
@@ -31,31 +32,30 @@ namespace CustomizableRss
 
         private void EditRss(object sender, RoutedEventArgs e)
         {
-            var rssItem = (sender as StackPanel).DataContext as RssFeed;
-            isolatedStorageSettings["rssFeed"] = rssItem;
-            settingsViewModel.RssFeeds.Remove(rssItem);
-            NavigationService.Navigate(new Uri("AddEditPage.xaml", UriKind.Relative));
+            var rssItem = (sender as MenuItem).DataContext as RssFeed;
+            if (isolatedStorageSettings.Contains(RssFeedKey)){
+                isolatedStorageSettings.Remove(RssFeedKey);
+            }
+            isolatedStorageSettings[RssFeedKey] = rssItem;
+            NavigationService.Navigate(new Uri("/AddEditPage.xaml", UriKind.Relative));
             NavigationService.Navigated += NavigatedBackToPage;
         }
 
         private void NavigatedBackToPage(object sender, NavigationEventArgs navigationEventArgs)
         {
-            if (isolatedStorageSettings.Contains("rssFeed"))
-            {
-                var rssFeed = isolatedStorageSettings["rssFeed"] as RssFeed;
-                settingsViewModel.RssFeeds.Add(rssFeed);
-            }
+            if (!navigationEventArgs.Uri.OriginalString.Equals("/SettingsPage.xaml")) {return;}
+            settingsViewModel.UpdateRssFeeds();
         }
 
         private void DeleteRss(object sender, RoutedEventArgs e)
         {
-            var rssItem = (sender as StackPanel).DataContext as RssFeed;
+            var rssItem = (sender as MenuItem).DataContext as RssFeed;
             settingsViewModel.RemoveRssFeed(rssItem);
         }
 
         private void AddRss(object sender, RoutedEventArgs e)
         {
-            isolatedStorageSettings.Remove("rssFeed");
+            isolatedStorageSettings.Remove(RssFeedKey);
             NavigationService.Navigate(new Uri("/AddEditPage.xaml", UriKind.Relative));
             NavigationService.Navigated += NavigatedBackToPage;
         }

@@ -24,17 +24,23 @@ namespace CustomizableRss.MiniRss
         }
 
         public RssFeed(Rss.Structure.RssFeed rss):base(){
-            this.Stories = new ObservableCollection<RssStory>();
+            this.Stories = new ObservableCollection<RssStory>(CloneStories(rss));
             this.RssTitle = rss.Channel.Title;
             this.LastUpdated = DateTime.Now;
+        }
+
+        public static List<RssStory> CloneStories(Rss.Structure.RssFeed rss)
+        {
+            var stories = new List<RssStory>();
             foreach (var rssItem in rss.Channel.Item)
             {
                 var rssStory = new RssStory();
                 rssStory.Description = rssItem.Description;
                 rssStory.StoryLink = rssItem.Link.Url;
                 rssStory.Title = rssItem.Title;
-                Stories.Add(rssStory);
+                stories.Add(rssStory);
             }
+            return stories;
         }
 
         [DataMember]

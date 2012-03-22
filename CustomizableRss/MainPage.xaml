@@ -41,7 +41,6 @@
                   </toolkit:ContextMenuService.ContextMenu>
                   <TextBlock Text="{Binding Title}" TextWrapping="Wrap" Style="{StaticResource PhoneTextNormalStyle}" />
                   <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Margin="12,-6,12,0" Style="{StaticResource PhoneTextSmallStyle}" />
-                  <!--<TextBlock Text="{Binding Link}" TextWrapping="Wrap" Margin="12,-6,12,0" Style="{StaticResource PhoneTextSmallStyle}"/>-->
                 </StackPanel>
               </DataTemplate>
             </ListBox.ItemTemplate>

@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO.IsolatedStorage;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Navigation;
 using CustomizableRss.MiniRss;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Tasks;
@@ -12,8 +16,6 @@ namespace CustomizableRss
 
     public partial class MainPage : PhoneApplicationPage
     {
-        #region Methods of MainPage
-
         public MainPage()
         {
             InitializeComponent();
@@ -63,10 +65,17 @@ namespace CustomizableRss
 
         private void ViewSettings(object sender, EventArgs e)
         {
+            NavigationService.Navigated += ReturnedToPage;
             NavigationService.Navigate(new Uri("/SettingsPage.xaml", UriKind.Relative));
         }
 
-        #endregion Methods of MainPage
+        private void ReturnedToPage(object sender, NavigationEventArgs navigationEventArgs)
+        {
+            if (!navigationEventArgs.Uri.OriginalString.Equals("/MainPage.xaml")) { return; }
+            var rssFeeds = IsolatedStorageSettings.ApplicationSettings["rssFeeds"] as IEnumerable<RssFeed>;
+            App.ViewModel.StorySources = new ObservableCollection<RssFeed>(rssFeeds);
+
+        }
     }
 
 }

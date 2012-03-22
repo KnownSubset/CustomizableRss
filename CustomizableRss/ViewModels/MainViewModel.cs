@@ -13,6 +13,7 @@ namespace CustomizableRss.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+        private const string RssFeedsKey = "rssFeeds";
         private string _sampleProperty = "Sample Runtime Property Value";
         private ObservableCollection<RssFeed> _storySources;
         private readonly IsolatedStorageSettings _applicationSettings = IsolatedStorageSettings.ApplicationSettings;
@@ -32,7 +33,7 @@ namespace CustomizableRss.ViewModels
         public ObservableCollection<RssFeed> StorySources
         {
             get { return _storySources; }
-            private set
+            set
             {
                 _storySources = value;
                 NotifyPropertyChanged("StorySources");
@@ -74,7 +75,7 @@ namespace CustomizableRss.ViewModels
                 Deployment.Current.Dispatcher.BeginInvoke(() => UpdateRssFeed(rss, state.RssFeed));
             } catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                Deployment.Current.Dispatcher.BeginInvoke(() => MessageBox.Show(exception.Message));
             }
         }
 
@@ -90,7 +91,7 @@ namespace CustomizableRss.ViewModels
             NotifyPropertyChanged("StorySources");
             NotifyPropertyChanged("Stories");
             rssFeed.LastUpdated = DateTime.Now;
-            _applicationSettings["rssFeeds"] = new Collection<RssFeed> (StorySources);
+            _applicationSettings[RssFeedsKey] = new Collection<RssFeed> (StorySources);
             _applicationSettings.Save();
         }
 
@@ -108,16 +109,15 @@ namespace CustomizableRss.ViewModels
                 var nprScienceNewRssFeed = new MiniRss.RssFeed();
                 nprScienceNewRssFeed.RssTitle = "Science";
                 nprScienceNewRssFeed.RssLink = new Uri("https://www.npr.org/rss/rss.php?id=1007");
-                _applicationSettings["rssFeeds"] = new Collection<MiniRss.RssFeed> {hackerNewRssFeed, nprScienceNewRssFeed};
+                _applicationSettings[RssFeedsKey] = new Collection<MiniRss.RssFeed> {hackerNewRssFeed, nprScienceNewRssFeed};
                 _applicationSettings.Save();
             }
-            StorySources = new ObservableCollection<RssFeed>(_applicationSettings["rssFeeds"] as Collection<RssFeed>);
+            StorySources = new ObservableCollection<RssFeed>(_applicationSettings[RssFeedsKey] as Collection<RssFeed>);
             LoadRssFeeds();
             IsDataLoaded = true;
         }
 
-        private void LoadRssFeeds()
-        {
+        private void LoadRssFeeds() {
             foreach (RssFeed rssFeed in StorySources){
                 LoadRssFeed(rssFeed);
             }
@@ -132,8 +132,7 @@ namespace CustomizableRss.ViewModels
             }
         }
 
-        private void NotifyPropertyChanged(String propertyName)
-        {
+        private void NotifyPropertyChanged(String propertyName) {
             PropertyChangedEventHandler handler = PropertyChanged;
             if (null != handler)
             {
@@ -141,15 +140,14 @@ namespace CustomizableRss.ViewModels
             }
         }
 
-        public void HideRssItem(RssStory rssItem){
-            foreach (MiniRss.RssFeed source in App.ViewModel.StorySources){
+        public void HideRssItem(RssStory rssItem) {
+            foreach (RssFeed source in App.ViewModel.StorySources){
                 source.Stories.Remove(rssItem);
             }
-            StorySources = new ObservableCollection<MiniRss.RssFeed>(StorySources);
+            StorySources = new ObservableCollection<RssFeed>(StorySources);
         }
 
-        public void RefreshRssFeed(MiniRss.RssFeed rssFeed)
-        {
+        public void RefreshRssFeed(RssFeed rssFeed) {
             WebRequest request = WebRequest.Create(rssFeed.RssLink);
             request.BeginGetResponse(EndGetResponse, new RequestState {Request = request, Address = rssFeed.RssLink, RssFeed = rssFeed});
         }

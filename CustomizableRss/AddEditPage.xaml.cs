@@ -43,5 +43,11 @@ namespace CustomizableRss
             textBox.GetBindingExpression(TextBox.TextProperty).UpdateSource();
             addEditRssViewModel.VerifyRssFeed();
         }
+
+        private void SaveFeed(object sender, EventArgs e)
+        {
+            addEditRssViewModel.SaveFeed();
+            NavigationService.GoBack();
+        }
     }
 }
