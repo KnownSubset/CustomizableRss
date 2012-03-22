@@ -56,7 +56,9 @@ namespace CustomizableRss.ViewModels
         public void RemoveRssFeed(RssFeed rssFeed){
             var rssFeeds = isolatedStorageSettings[RssFeedsKey] as Collection<RssFeed>;
             rssFeeds.Remove(rssFeed);
+            RssFeeds.Remove(rssFeed);
             isolatedStorageSettings.Save();
+            NotifyPropertyChanged("RssFeeds");
         }
 
         public void UpdateRssFeeds(){
@@ -69,6 +71,7 @@ namespace CustomizableRss.ViewModels
                 }
                 isolatedStorageSettings.Remove(RssFeedKey);
             }
+            RssFeeds = new ObservableCollection<RssFeed>(_rssFeeds);
         }
     }
 
