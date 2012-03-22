@@ -1,45 +1,52 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO.IsolatedStorage;
+using System.Linq;
+using System.Net;
+using System.Windows;
+using CustomizableRss.MiniRss;
+using CustomizableRss.Rss;
 
-
-namespace CustomizableRss
+namespace CustomizableRss.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
+        private const string RssFeedsKey = "rssFeeds";
+        private string _sampleProperty = "Sample Runtime Property Value";
+        private ObservableCollection<RssFeed> _storySources;
+        private readonly IsolatedStorageSettings _applicationSettings = IsolatedStorageSettings.ApplicationSettings;
+
         public MainViewModel()
         {
-            this.Items = new ObservableCollection<ItemViewModel>();
+            Items = new ObservableCollection<ItemViewModel>();
+            StorySources = new ObservableCollection<RssFeed>();
         }
+
 
         /// <summary>
         /// A collection for ItemViewModel objects.
         /// </summary>
         public ObservableCollection<ItemViewModel> Items { get; private set; }
-        public ObservableCollection<RssSource> StorySources { get; private set; }
 
-        private string _sampleProperty = "Sample Runtime Property Value";
+        public ObservableCollection<RssFeed> StorySources
+        {
+            get { return _storySources; }
+            set
+            {
+                _storySources = value;
+                NotifyPropertyChanged("StorySources");
+            }
+        }
+
         /// <summary>
         /// Sample ViewModel property; this property is used in the view to display its value using a Binding
         /// </summary>
         /// <returns></returns>
         public string SampleProperty
         {
-            get
-            {
-                return _sampleProperty;
-            }
+            get { return _sampleProperty; }
             set
             {
                 if (value != _sampleProperty)
@@ -50,10 +57,42 @@ namespace CustomizableRss
             }
         }
 
-        public bool IsDataLoaded
+        public bool IsDataLoaded { get; private set; }
+
+        #region INotifyPropertyChanged Members
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
+
+        private void EndGetResponse(IAsyncResult result)
         {
-            get;
-            private set;
+            try
+            {
+                var state = result.AsyncState as RequestState;
+                WebResponse response = state.Request.EndGetResponse(result);
+                Rss.Structure.RssFeed rss = RssHelper.ReadRss(response.GetResponseStream());
+                Deployment.Current.Dispatcher.BeginInvoke(() => UpdateRssFeed(rss, state.RssFeed));
+            } catch (Exception exception)
+            {
+                Deployment.Current.Dispatcher.BeginInvoke(() => MessageBox.Show(exception.Message));
+            }
+        }
+
+        private void UpdateRssFeed(Rss.Structure.RssFeed rss, RssFeed rssFeed)
+        {
+            var miniRss = new RssFeed(rss);
+            rssFeed.Stories.Clear();
+            foreach (RssStory story in miniRss.Stories){
+                rssFeed.Stories.Add(story);
+            }
+            _applicationSettings.Remove(rssFeed.RssTitle);
+            rssFeed.RssTitle = miniRss.RssTitle;
+            NotifyPropertyChanged("StorySources");
+            NotifyPropertyChanged("Stories");
+            rssFeed.LastUpdated = DateTime.Now;
+            _applicationSettings[RssFeedsKey] = new Collection<RssFeed> (StorySources);
+            _applicationSettings.Save();
         }
 
         /// <summary>
@@ -61,35 +100,67 @@ namespace CustomizableRss
         /// </summary>
         public void LoadData()
         {
-            // Sample data; replace with real data
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime one", LineTwo = "Maecenas praesent accumsan bibendum", LineThree = "Facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat pulvinar sagittis senectus sociosqu" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime two", LineTwo = "Dictumst eleifend facilisi faucibus", LineThree = "Suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime three", LineTwo = "Habitant inceptos interdum lobortis", LineThree = "Habitant inceptos interdum lobortis nascetur pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime four", LineTwo = "Nascetur pharetra placerat pulvinar", LineThree = "Ultrices vehicula volutpat maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime five", LineTwo = "Maecenas praesent accumsan bibendum", LineThree = "Maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime six", LineTwo = "Dictumst eleifend facilisi faucibus", LineThree = "Pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime seven", LineTwo = "Habitant inceptos interdum lobortis", LineThree = "Accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime eight", LineTwo = "Nascetur pharetra placerat pulvinar", LineThree = "Pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime nine", LineTwo = "Maecenas praesent accumsan bibendum", LineThree = "Facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat pulvinar sagittis senectus sociosqu" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime ten", LineTwo = "Dictumst eleifend facilisi faucibus", LineThree = "Suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime eleven", LineTwo = "Habitant inceptos interdum lobortis", LineThree = "Habitant inceptos interdum lobortis nascetur pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime twelve", LineTwo = "Nascetur pharetra placerat pulvinar", LineThree = "Ultrices vehicula volutpat maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime thirteen", LineTwo = "Maecenas praesent accumsan bibendum", LineThree = "Maecenas praesent accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime fourteen", LineTwo = "Dictumst eleifend facilisi faucibus", LineThree = "Pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime fifteen", LineTwo = "Habitant inceptos interdum lobortis", LineThree = "Accumsan bibendum dictumst eleifend facilisi faucibus habitant inceptos interdum lobortis nascetur pharetra placerat" });
-            this.Items.Add(new ItemViewModel() { LineOne = "runtime sixteen", LineTwo = "Nascetur pharetra placerat pulvinar", LineThree = "Pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum" });
-
-            this.IsDataLoaded = true;
+            if (!_applicationSettings.Contains("initialized"))
+            {
+                _applicationSettings["initialized"] = true;
+                var hackerNewRssFeed = new MiniRss.RssFeed();
+                hackerNewRssFeed.RssTitle = "Hacker News";
+                hackerNewRssFeed.RssLink = new Uri("https://news.ycombinator.com/rss");
+                var nprScienceNewRssFeed = new MiniRss.RssFeed();
+                nprScienceNewRssFeed.RssTitle = "Science";
+                nprScienceNewRssFeed.RssLink = new Uri("https://www.npr.org/rss/rss.php?id=1007");
+                _applicationSettings[RssFeedsKey] = new Collection<MiniRss.RssFeed> {hackerNewRssFeed, nprScienceNewRssFeed};
+                _applicationSettings.Save();
+            }
+            StorySources = new ObservableCollection<RssFeed>(_applicationSettings[RssFeedsKey] as Collection<RssFeed>);
+            LoadRssFeeds();
+            IsDataLoaded = true;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        private void NotifyPropertyChanged(String propertyName)
+        private void LoadRssFeeds() {
+            foreach (RssFeed rssFeed in StorySources){
+                LoadRssFeed(rssFeed);
+            }
+        }
+
+        private void LoadRssFeed(RssFeed rssFeed)
         {
+            var timeSpan = new TimeSpan(DateTime.Now.Ticks - rssFeed.LastUpdated.Ticks);
+            if (timeSpan.Days > 0)
+            {
+                RefreshRssFeed(rssFeed);
+            }
+        }
+
+        private void NotifyPropertyChanged(String propertyName) {
             PropertyChangedEventHandler handler = PropertyChanged;
             if (null != handler)
             {
                 handler(this, new PropertyChangedEventArgs(propertyName));
             }
         }
+
+        public void HideRssItem(RssStory rssItem) {
+            foreach (RssFeed source in App.ViewModel.StorySources){
+                source.Stories.Remove(rssItem);
+            }
+            StorySources = new ObservableCollection<RssFeed>(StorySources);
+        }
+
+        public void RefreshRssFeed(RssFeed rssFeed) {
+            WebRequest request = WebRequest.Create(rssFeed.RssLink);
+            request.BeginGetResponse(EndGetResponse, new RequestState {Request = request, Address = rssFeed.RssLink, RssFeed = rssFeed});
+        }
+
+        #region Nested type: RequestState
+
+        public class RequestState
+        {
+            public WebRequest Request { get; set; }
+            public Uri Address { get; set; }
+            public RssFeed RssFeed { get; set; }
+        }
+
+        #endregion
     }
 }
