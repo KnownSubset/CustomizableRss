@@ -49,8 +49,13 @@ namespace CustomizableRss
 
         private void RefreshRssFeed(object sender, EventArgs e)
         {
-            var rssFeed = (rssPivot.SelectedItem ?? rssPivot.Items[0]) as RssFeed;
-            App.ViewModel.RefreshRssFeed(rssFeed);
+            var rssFeed = rssPivot.SelectedItem as RssFeed;
+            if (rssFeed == null && rssPivot.Items.Count > 0) { 
+                rssFeed = rssPivot.Items[0] as RssFeed;
+            }
+            if (rssFeed != null) {
+                App.ViewModel.RefreshRssFeed(rssFeed);
+            }
         }
 
         private void Share(object sender, RoutedEventArgs e)
