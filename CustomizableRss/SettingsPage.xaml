@@ -7,7 +7,8 @@
     xmlns:controls="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
+    xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit" 
+    xmlns:local="clr-namespace:CustomizableRss.Converters"
   mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="768"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
@@ -20,51 +21,49 @@
         
         <!--Pivot Control-->
         <controls:Pivot Title="RSS Fusion">
-            <!--Pivot item one-->
             <controls:PivotItem Header="rss feeds">
-                <StackPanel>
-                    <!--Double line list with text wrapping-->
-                    <ListBox Margin="0,0,-12,0" ItemsSource="{Binding RssFeeds}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Margin="0,0,0,17" Width="432" Height="78">
-                                    <toolkit:ContextMenuService.ContextMenu>
-                                        <toolkit:ContextMenu>
-                                            <toolkit:MenuItem Header="edit" Tag="edit" Click="EditRss" />
-                                            <toolkit:MenuItem Header="delete" Tag="delete" Click="DeleteRss" />
-                                        </toolkit:ContextMenu>
-                                    </toolkit:ContextMenuService.ContextMenu>
-                                    <TextBlock Text="{Binding RssTitle}" Style="{StaticResource PhoneTextExtraLargeStyle}"/>
-                                    <TextBlock Text="{Binding RssLink}" TextWrapping="Wrap" Margin="12,-6,12,0" Style="{StaticResource PhoneTextSmallStyle}"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    
+                <ScrollViewer>
+                    <Grid>
+                        <Grid.Resources>
+                            <local:EmptyIsVisibileConverter x:Key="EmptyIsVisibileConverter" />
+                        </Grid.Resources>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Margin="20,40" Text="You have no rss feeds set up. Use the button below to get your feeds delivered." TextWrapping="Wrap" Style="{StaticResource PhoneTextLargeStyle}" HorizontalAlignment="Center" VerticalAlignment="Stretch" Visibility="{Binding RssFeeds, Converter={StaticResource EmptyIsVisibileConverter}}"/>
+                        <!--Double line list with text wrapping-->
+                        <ListBox Grid.Row="0" Margin="0,0,-12,0" ItemsSource="{Binding RssFeeds}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <toolkit:ContextMenuService.ContextMenu>
+                                            <toolkit:ContextMenu>
+                                                <toolkit:MenuItem Header="edit" Tag="edit" Click="EditRss" />
+                                                <toolkit:MenuItem Header="delete" Tag="delete" Click="DeleteRss" />
+                                            </toolkit:ContextMenu>
+                                        </toolkit:ContextMenuService.ContextMenu>
+                                        <TextBlock Text="{Binding RssTitle}" Style="{StaticResource PhoneTextExtraLargeStyle}"/>
+                                        <TextBlock Text="{Binding RssLink}" TextWrapping="Wrap" Margin="12,-6,12,0" Style="{StaticResource PhoneTextSmallStyle}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <Button Grid.Row="1" BorderThickness="0" Click="AddRss" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                            <Grid>
+                                <Image Source="/Images/appbar.add.rest.png" Stretch="None" HorizontalAlignment="Center"/>
+                                <Image Source="/Images/appbar.basecircle.rest.png" Stretch="None" />
+                            </Grid>
+                        </Button>
+                    </Grid>
+                </ScrollViewer>
+            </controls:PivotItem>      
+            <controls:PivotItem Header="about">
+                <StackPanel HorizontalAlignment="Center">
+                    <TextBlock Padding="0,15" Text="We know that we can be better with your help.  If you have any comments or suggestions please email them to knownsubset@hotmail.com." TextWrapping="Wrap" Style="{StaticResource PhoneTextSmallStyle}"/>
+                    <TextBlock Padding="0,15" Text="Version: 1.1" TextWrapping="Wrap" Style="{StaticResource PhoneTextSmallStyle}"/>
                 </StackPanel>
             </controls:PivotItem>
-
         </controls:Pivot>
-        <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right">
-            <Button BorderThickness="0" Padding="-10" Click="AddRss" Width="50"  Margin="15,70,25,0" HorizontalAlignment="Center">
-                <Grid>
-                    <Image Source="/Images/appbar.add.rest.png" Stretch="None" HorizontalAlignment="Center"/>
-                    <Image Source="/Images/appbar.basecircle.rest.png" />
-                </Grid>
-            </Button>
-        </StackPanel>
     </Grid>
-
-    <!--Sample code showing usage of ApplicationBar-->
-    <!--<phone:PhoneApplicationPage.ApplicationBar>
-        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-            <shell:ApplicationBarIconButton x:Name="appbar_button1" IconUri="/Images/appbar_button1.png" Text="Button 1"/>
-            <shell:ApplicationBarIconButton x:Name="appbar_button2" IconUri="/Images/appbar_button2.png" Text="Button 2"/>
-            <shell:ApplicationBar.MenuItems>
-                <shell:ApplicationBarMenuItem x:Name="menuItem1" Text="MenuItem 1"/>
-                <shell:ApplicationBarMenuItem x:Name="menuItem2" Text="MenuItem 2"/>
-            </shell:ApplicationBar.MenuItems>
-        </shell:ApplicationBar>
-    </phone:PhoneApplicationPage.ApplicationBar>-->
-    
 </phone:PhoneApplicationPage>

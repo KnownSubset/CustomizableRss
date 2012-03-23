@@ -29,7 +29,7 @@ namespace CustomizableRss
         {
             var rssItem = (sender as StackPanel).DataContext as RssStory;
             var wbt = new WebBrowserTask();
-            wbt.URL = rssItem.StoryLink.AbsoluteUri;
+            wbt.Uri = rssItem.StoryLink;
             wbt.Show();
         }
 
@@ -50,7 +50,12 @@ namespace CustomizableRss
         private void RefreshRssFeed(object sender, EventArgs e)
         {
             var rssFeed = rssPivot.SelectedItem as RssFeed;
-            App.ViewModel.RefreshRssFeed(rssFeed);
+            if (rssFeed == null && rssPivot.Items.Count > 0) { 
+                rssFeed = rssPivot.Items[0] as RssFeed;
+            }
+            if (rssFeed != null) {
+                App.ViewModel.RefreshRssFeed(rssFeed);
+            }
         }
 
         private void Share(object sender, RoutedEventArgs e)
