@@ -21,7 +21,7 @@
         <local:EmptyIsVisibileConverter x:Key="EmptyIsVisibileConverter" />
       </Grid.Resources>
       <TextBlock Margin="20" Text="You have no rss feeds set up. Use the settings button below to configure your rss feeds." TextWrapping="Wrap" Style="{StaticResource PhoneTextLargeStyle}" HorizontalAlignment="Center" VerticalAlignment="Center"
-        Visibility="{Binding RssFeeds, Converter={StaticResource EmptyIsVisibileConverter}}" />
+        Visibility="{Binding StorySources, Converter={StaticResource EmptyIsVisibileConverter}}" />
       <!--Pivot Control-->
       <controls:Pivot x:Name="rssPivot" Title="RSS Fusion" ItemsSource="{Binding StorySources}">
         <controls:Pivot.HeaderTemplate>
