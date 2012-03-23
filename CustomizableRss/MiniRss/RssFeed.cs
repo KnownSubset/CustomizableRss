@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -14,6 +15,7 @@ using System.Windows.Shapes;
 
 namespace CustomizableRss.MiniRss
 {
+
     [DataContract]
     public class RssFeed
     {
@@ -32,12 +34,11 @@ namespace CustomizableRss.MiniRss
         public static List<RssStory> CloneStories(Rss.Structure.RssFeed rss)
         {
             var stories = new List<RssStory>();
-            foreach (var rssItem in rss.Channel.Item)
-            {
+            foreach (var rssItem in rss.Channel.Item) {
                 var rssStory = new RssStory();
-                rssStory.Description = rssItem.Description;
+                rssStory.Description = StripTagsCharArray(rssItem.Description);
                 rssStory.StoryLink = rssItem.Link.Url;
-                rssStory.Title = rssItem.Title;
+                rssStory.Title = StripTagsCharArray(rssItem.Title);
                 stories.Add(rssStory);
             }
             return stories;
@@ -59,6 +60,17 @@ namespace CustomizableRss.MiniRss
         public string RssTitle { get; set; }
         [DataMember]
         public DateTime LastUpdated { get; set; }
+
+        /// <summary>
+        /// Compiled regular expression for performance.
+        /// </summary>
+        static Regex htmlRegex = new Regex("<.*?>", RegexOptions.Compiled);
+        /// <summary>
+        /// Remove HTML tags from string using char array.
+        /// </summary>
+        public static string StripTagsCharArray(string source){
+            return htmlRegex.Replace(source, string.Empty).Replace("\t",string.Empty).Replace("\n", string.Empty);
+        }
     }
 
     [DataContract]
