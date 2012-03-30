@@ -69,6 +69,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="Converters\InverseConverter.cs" />
     <Compile Include="Converters\EmptyIsVisibileConverter.cs" />
     <Compile Include="Converters\NotNullIsVisibleConverter.cs" />
     <Compile Include="Converters\NullToVisibilityConverter.cs" />
@@ -130,7 +131,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\AppManifest.xml" />
-    <None Include="Properties\WMAppManifest.xml" />
+    <None Include="Properties\WMAppManifest.xml">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="ApplicationIcon.png">
@@ -147,6 +150,9 @@
     <Content Include="Images\appbar.feature.settings.rest.png" />
     <Content Include="Images\appbar.upload.rest.png" />
     <Content Include="Images\appbar.basecircle.rest.png" />
+    <Resource Include="Images\LargeApplicationTile.png" />
+    <Resource Include="Images\MarketplaceTile.png" />
+    <Resource Include="Images\SmallApplicationTile.png" />
     <Content Include="SplashScreenImage.jpg" />
   </ItemGroup>
   <ItemGroup />

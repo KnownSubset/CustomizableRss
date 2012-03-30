@@ -16,7 +16,7 @@ namespace CustomizableRss.ViewModels {
         private readonly IsolatedStorageSettings isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
         private string link = string.Empty;
         private string urlStatus = string.Empty;
-        private const string invalidRssFeed = "(ノಠ益ಠ)ノ彡┻━┻ it doesn't work";
+        private const string invalidRssFeed = "(ノಠ益ಠ)ノ彡┻━┻ couldn't confirm it, but you can try it anyways";
         private const string validRssFeed = "ヽ(´▽`)/ you are good!";
 
         public string Link {
@@ -89,7 +89,7 @@ namespace CustomizableRss.ViewModels {
                     }
                     var rssFeed =  isolatedStorageSettings[RssFeedKey] as RssFeed;
                     rssFeed.RssLink = state.Address;
-                    rssFeed.RssTitle = rss.Channel.Title;
+                    rssFeed.RssTitle = rss.Channel.Title.ToLower();
                     rssFeed.LastUpdated = DateTime.Now;
                     rssFeed.Stories = new ObservableCollection<RssStory>(RssFeed.CloneStories(rss));
                 }

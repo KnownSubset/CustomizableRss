@@ -154,7 +154,7 @@ namespace CustomizableRss.Rss.Structure
         ///   geo@herald.com (George Matesky)
         /// </example>
         [XmlElement("managingEditor")]
-        public RssEmail ManagingEditor { get; set; }
+        public string ManagingEditor { get; set; }
 
         /// <summary>
         ///   Gets or sets the publication date for the content in the channel. 
