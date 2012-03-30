@@ -8,27 +8,27 @@ using System.Net;
 using System.Windows;
 using CustomizableRss.MiniRss;
 using CustomizableRss.Rss;
+using Microsoft.Phone.Net.NetworkInformation;
 
 namespace CustomizableRss.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
         private const string RssFeedsKey = "rssFeeds";
-        private string _sampleProperty = "Sample Runtime Property Value";
         private ObservableCollection<RssFeed> _storySources;
         private readonly IsolatedStorageSettings _applicationSettings = IsolatedStorageSettings.ApplicationSettings;
+        private bool _isDataLoaded;
+        private bool feedsExists;
 
         public MainViewModel()
         {
-            Items = new ObservableCollection<ItemViewModel>();
-            StorySources = new ObservableCollection<RssFeed>();
+            _storySources = new ObservableCollection<RssFeed>();
         }
 
 
         /// <summary>
         /// A collection for ItemViewModel objects.
         /// </summary>
-        public ObservableCollection<ItemViewModel> Items { get; private set; }
 
         public ObservableCollection<RssFeed> StorySources
         {
@@ -37,27 +37,24 @@ namespace CustomizableRss.ViewModels
             {
                 _storySources = value;
                 NotifyPropertyChanged("StorySources");
+                NotifyPropertyChanged("FeedsExists");
             }
         }
 
-        /// <summary>
-        /// Sample ViewModel property; this property is used in the view to display its value using a Binding
-        /// </summary>
-        /// <returns></returns>
-        public string SampleProperty
+        public bool FeedsExists
         {
-            get { return _sampleProperty; }
-            set
-            {
-                if (value != _sampleProperty)
-                {
-                    _sampleProperty = value;
-                    NotifyPropertyChanged("SampleProperty");
-                }
-            }
+            get { return _isDataLoaded && (_storySources!=null && _storySources.Count == 0); }
         }
 
-        public bool IsDataLoaded { get; private set; }
+        public bool IsDataLoaded
+        {
+            get { return _isDataLoaded; }
+            set { 
+                _isDataLoaded = value;
+                NotifyPropertyChanged("IsDataLoaded");
+                NotifyPropertyChanged("FeedsExists");
+            }
+        }
 
         #region INotifyPropertyChanged Members
 
@@ -72,9 +69,10 @@ namespace CustomizableRss.ViewModels
                 var state = result.AsyncState as RequestState;
                 WebResponse response = state.Request.EndGetResponse(result);
                 Rss.Structure.RssFeed rss = RssHelper.ReadRss(response.GetResponseStream());
+                Deployment.Current.Dispatcher.BeginInvoke(() => IsDataLoaded = true);
                 Deployment.Current.Dispatcher.BeginInvoke(() => UpdateRssFeed(rss, state.RssFeed));
-            } catch (Exception exception)
-            {
+            } catch (Exception exception) {
+                Deployment.Current.Dispatcher.BeginInvoke(() => IsDataLoaded = true);
                 Deployment.Current.Dispatcher.BeginInvoke(() => MessageBox.Show(exception.Message));
             }
         }
@@ -87,7 +85,7 @@ namespace CustomizableRss.ViewModels
                 rssFeed.Stories.Add(story);
             }
             _applicationSettings.Remove(rssFeed.RssTitle);
-            rssFeed.RssTitle = miniRss.RssTitle;
+            rssFeed.RssTitle = miniRss.RssTitle.ToLower();
             NotifyPropertyChanged("StorySources");
             NotifyPropertyChanged("Stories");
             rssFeed.LastUpdated = DateTime.Now;
@@ -103,13 +101,13 @@ namespace CustomizableRss.ViewModels
             if (!_applicationSettings.Contains("initialized"))
             {
                 _applicationSettings["initialized"] = true;
-                var hackerNewRssFeed = new MiniRss.RssFeed();
-                hackerNewRssFeed.RssTitle = "Hacker News";
+                var hackerNewRssFeed = new RssFeed();
+                hackerNewRssFeed.RssTitle = "hacker news";
                 hackerNewRssFeed.RssLink = new Uri("https://news.ycombinator.com/rss");
-                var nprScienceNewRssFeed = new MiniRss.RssFeed();
-                nprScienceNewRssFeed.RssTitle = "Science";
+                var nprScienceNewRssFeed = new RssFeed();
+                nprScienceNewRssFeed.RssTitle = "science";
                 nprScienceNewRssFeed.RssLink = new Uri("https://www.npr.org/rss/rss.php?id=1007");
-                _applicationSettings[RssFeedsKey] = new Collection<MiniRss.RssFeed> {hackerNewRssFeed, nprScienceNewRssFeed};
+                _applicationSettings[RssFeedsKey] = new Collection<RssFeed> {hackerNewRssFeed, nprScienceNewRssFeed};
                 _applicationSettings.Save();
             }
             StorySources = new ObservableCollection<RssFeed>(_applicationSettings[RssFeedsKey] as Collection<RssFeed>);
@@ -118,6 +116,7 @@ namespace CustomizableRss.ViewModels
         }
 
         private void LoadRssFeeds() {
+            IsDataLoaded = false;            
             foreach (RssFeed rssFeed in StorySources){
                 LoadRssFeed(rssFeed);
             }
@@ -126,16 +125,14 @@ namespace CustomizableRss.ViewModels
         private void LoadRssFeed(RssFeed rssFeed)
         {
             var timeSpan = new TimeSpan(DateTime.Now.Ticks - rssFeed.LastUpdated.Ticks);
-            if (timeSpan.Days > 0)
-            {
+            if (timeSpan.Days > 0) {
                 RefreshRssFeed(rssFeed);
             }
         }
 
         private void NotifyPropertyChanged(String propertyName) {
             PropertyChangedEventHandler handler = PropertyChanged;
-            if (null != handler)
-            {
+            if (null != handler) {
                 handler(this, new PropertyChangedEventArgs(propertyName));
             }
         }
@@ -148,8 +145,13 @@ namespace CustomizableRss.ViewModels
         }
 
         public void RefreshRssFeed(RssFeed rssFeed) {
-            WebRequest request = WebRequest.Create(rssFeed.RssLink);
-            request.BeginGetResponse(EndGetResponse, new RequestState {Request = request, Address = rssFeed.RssLink, RssFeed = rssFeed});
+            if (DeviceNetworkInformation.IsNetworkAvailable) {
+                IsDataLoaded = false;
+                WebRequest request = WebRequest.Create(rssFeed.RssLink);
+                request.BeginGetResponse(EndGetResponse, new RequestState {Request = request, Address = rssFeed.RssLink, RssFeed = rssFeed});
+            } else {
+                Deployment.Current.Dispatcher.BeginInvoke(() => MessageBox.Show("Unable to connect.  Please check your network settings."));                
+            }
         }
 
         #region Nested type: RequestState
